@@ -114,27 +114,49 @@ TEST_CASE( "TEST Inverted Pendulum:" )
   // user defined function for all constreaintzs
 
 
-  // OptiNLC_Solver<double, InputSize, StateSize, ConstraintsSize,ControlPoints> _solver(ocp);
-  //  _solver.solve(0.0, initialState, initialInput);
+  OptiNLC_Solver<double, InputSize, StateSize, ConstraintsSize,ControlPoints> _solver(ocp);
+  _solver.solve(0.0, initialState, initialInput);
 
-  // auto opt_x =  _solver.get_optimal_states();
-  // auto time = _solver.getTime();
+  auto opt_x =  _solver.get_optimal_states();
+  auto time = _solver.getTime();
 
-  /*
-       std::ofstream dataFile("eigen_data.txt");
+  std::ofstream dataFile("eigen_data_01.txt");
 
-       // Check if the file is open
-       if (dataFile.is_open()) {
-           for (int i = 0; i < time.size(); ++i) {
-               dataFile << time[i]<< " " << opt_x[StateSize*i + 0] << " " << opt_x[StateSize*i + 1]
-                       << " " << opt_x[StateSize*i + 2]
-                       << " " << opt_x[StateSize*i + 3] << std::endl;
-           }
-           dataFile.close();
-           std::cout << "Data saved to eigen_data.txt" << std::endl;
-       } else {
-           std::cerr << "Unable to open file for writing." << std::endl;
-       }
-*/
-  REQUIRE( true );
+  // Check if the file is open
+  if (dataFile.is_open()) {
+      for (int i = 0; i < time.size(); ++i) {
+          dataFile << time[i]<< " " << opt_x[StateSize*i + 0] << " " << opt_x[StateSize*i + 1]
+                  << " " << opt_x[StateSize*i + 2]
+                  << " " << opt_x[StateSize*i + 3] << std::endl;
+      }
+      dataFile.close();
+      std::cout << "Data saved to eigen_data_01.txt" << std::endl;
+  } else {
+      std::cerr << "Unable to open file for writing." << std::endl;
+      REQUIRE( false );
+  }
+
+  double sum0=0, sum1=0, sum2=0, sum3=0, sum00=0, sum11=0, sum22=0, sum33=0;
+
+  //first half of pendulum simulation
+  for (int i = 0; i < time.size() / 2; ++i) {
+    sum0 += std::abs(opt_x[StateSize * i]);
+    sum1 += std::abs(opt_x[StateSize * i + 1]);
+    sum2 += std::abs(opt_x[StateSize * i + 2]);
+    sum3 += std::abs(opt_x[StateSize * i + 3]);
+  }
+
+  //second half of pendulum simulation
+  for (int i = time.size() / 2; i < time.size(); ++i) {
+    sum00 += std::abs(opt_x[StateSize * i]);
+    sum11 += std::abs(opt_x[StateSize * i + 1]);
+    sum22 += std::abs(opt_x[StateSize * i + 2]);
+    sum33 += std::abs(opt_x[StateSize * i + 3]);
+  }
+  
+  //in general the pendulum values should be smaller than at the beginning
+  REQUIRE( sum0 > sum00 );
+  REQUIRE( sum1 > sum11 );
+  REQUIRE( sum2 > sum22 );
+  REQUIRE( sum3 > sum33 );
 }

@@ -20,10 +20,11 @@
 template<int Rows, int Cols>
 struct MATRIX;
 
-template<typename Scalar, int Size>
+template<typename Scalar, int Size,
+typename = std::enable_if_t<std::is_arithmetic_v<Scalar>>>
 struct VECTOR
 {
-  double vector[Size];
+  Scalar vector[Size];
 
   Scalar*
   data()

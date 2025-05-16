@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "OptiNLC_Data.h"
 #include "OptiNLC_Options.h"
@@ -147,7 +148,7 @@ TEST_CASE( "OCP Test NEW FORMAT:" )
     functionsConstraints.setConstant( std::numeric_limits<double>::infinity() );
     return functionsConstraints;
   } );
-  // user defined function for all constreaintzs
+  // user defined function for all constraints
 
 
   OptiNLC_Solver<double, InputSize, StateSize, ConstraintsSize, ControlPoints> _solver( ocp );
@@ -157,7 +158,9 @@ TEST_CASE( "OCP Test NEW FORMAT:" )
   auto opt_u = _solver.get_optimal_inputs();
   // Open a file for writing
 
-  std::ofstream dataFile( "eigen_data.txt" );
+  std::ofstream dataFile( "eigen_data_02.txt" );
+  //input shall be one smaller than values
+  REQUIRE (opt_x.size() / StateSize == opt_u.size() / InputSize + 1);
 
   // Check if the file is open
   if( dataFile.is_open() )
@@ -165,15 +168,32 @@ TEST_CASE( "OCP Test NEW FORMAT:" )
     for( int i = 0; i < time.size(); ++i )
     {
       dataFile << time[i] << " " << opt_x[StateSize * i + X] << " " << opt_x[StateSize * i + Y] << " " << opt_x[StateSize * i + PSI] << " "
-               << opt_x[StateSize * i + V] << " " << opt_x[StateSize * i + DELTA] << " " << opt_u[InputSize * i] << std::endl;
+               << opt_x[StateSize * i + V] << " " << opt_x[StateSize * i + DELTA];
+      if (InputSize * i < opt_u.size())
+      {
+        dataFile << " " << opt_u[InputSize * i] << std::endl;
+      } else {
+        dataFile << std::endl;
+      }
     }
     dataFile.close();
-    std::cout << "Data saved to eigen_data.txt" << std::endl;
+    std::cout << "Data saved to eigen_data_02.txt" << std::endl;
   }
   else
   {
     std::cerr << "Unable to open file for writing." << std::endl;
+    REQUIRE( false );
   }
 
-  REQUIRE( false );
+
+  for( int i = 2; i < time.size() - 1 ; ++i )
+  {
+    double minDiffPrev = std::abs(std::min(opt_u[InputSize * i - 4] - opt_u[InputSize * i - 2], opt_u[InputSize * i - 2] - opt_u[InputSize * i - 4]));
+    double minDiffNow = std::abs(std::min(opt_u[InputSize * i - 2] - opt_u[InputSize * i], opt_u[InputSize * i] - opt_u[InputSize * i - 2]));
+
+    //the optimization shall need an input, that is always smaller than before
+    //or the difference shall not getting larger
+    //no oscillation shall happen
+    REQUIRE((std::abs(opt_u[InputSize * i - 2]) > std::abs(opt_u[InputSize * i]) || minDiffPrev > minDiffNow));
+  }
 }

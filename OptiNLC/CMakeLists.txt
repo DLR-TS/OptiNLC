@@ -7,6 +7,7 @@ set(PACKAGE_MAINTAINER "DLR TS-KOS-SAI")
 set(PACKAGE_MAINTAINER_EMAIL "opensource-ts@dlr.de")
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra -O3")
+add_definitions(-w) #suppress warnings and only show compilation errors
 
 #add_library(${PROJECT_NAME} INTERFACE)
 #add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
