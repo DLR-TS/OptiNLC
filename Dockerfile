@@ -1,5 +1,5 @@
 ARG PROJECT
-ARG ARCH
+ARG ARCH=x86_64
 
 FROM eigen3:latest_${ARCH} AS eigen3 
 FROM osqp:latest_${ARCH} AS osqp 
