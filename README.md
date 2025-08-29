@@ -1,9 +1,14 @@
 # OptiNLC 
 A C++ library implementing Sequential Quadratic Programming
-With a docker build and run environment
+written by Prof. Dr.Reza Dariani. Reuse, distribution and modification of OptiNLC
+is permitted under the Apache 2.0 license.
 
-OptiNLC (Optimization of Non-Linear Control) is an open-source toolbox designed for solving optimization control problems. This documentation provides an overview of optimization problems, optimization control problems, and a guide on how to use the OptiNLC toolbox.
+OptiNLC (Optimization of Non-Linear Control) is an open-source toolbox designed
+for solving optimization control problems. This documentation provides an 
+overview of optimization problems, optimization control problems, and a guide 
+on how to use the OptiNLC toolbox.
 
+It provides a docker build and run environment
 
 ## Getting Started
 Docker and make required to package and build OptiNLC
