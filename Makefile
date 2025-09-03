@@ -133,7 +133,7 @@ clean:  ## Clean OptiNLC build artifacts
 push: docker_push
 
 .PHONY: docker_push
-docker_push: save_docker_images
+docker_push:
 	docker tag "${IMAGE}" "${IMAGE_PUBLISH}"
 	docker push "${IMAGE_PUBLISH}"
 
