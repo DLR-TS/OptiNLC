@@ -1,8 +1,10 @@
 ARG PROJECT
 ARG ARCH=x86_64
+ARG EIGEN3_TAG=lates
+ARG OSQP_TAG=latest
 
-FROM eigen3:latest_${ARCH} AS eigen3 
-FROM osqp:latest_${ARCH} AS osqp 
+FROM eigen3:${EIGEN3_TAG} AS eigen3 
+FROM osqp:${OSQP_TAG} AS osqp 
 
 FROM debian:bookworm-slim AS optinlc_requirements_base
 
