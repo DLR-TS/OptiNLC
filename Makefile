@@ -14,9 +14,18 @@ DOCKER_PLATFORM?=linux/$(ARCH)
 CROSS_COMPILE?=$(shell if [ "$(shell uname -m)" != "$(ARCH)" ]; then echo "true"; else echo "false"; fi)
 
 
+
+
 MATHEMATICS_TOOLBOX_SHORT_HASH:=$(shell cd ./mathematics_toolbox && git rev-parse --short HEAD)
-EIGEN3_TAG:=${MATHEMATICS_TOOLBOX_SHORT_HASH}_${ARCH}
+OSQP_PROJECT=osqp
 OSQP_TAG:=${MATHEMATICS_TOOLBOX_SHORT_HASH}_${ARCH}
+OSQP_IMAGE=${OSQP_PROJECT}:${OSQP_TAG}
+
+EIGEN3_PROJECT=eigen3
+EIGEN3_TAG:=${MATHEMATICS_TOOLBOX_SHORT_HASH}_${ARCH}
+EIGEN3_IMAGE=${EIGEN3_PROJECT}:${EIGEN3_TAG}
+
+
 
 
 SHORT_HASH:=$(shell git rev-parse --short HEAD)
@@ -25,7 +34,11 @@ DOCKER_REPOSITORY="ghcr.io/dlr-ts/optinlc"
 PROJECT:=optinlc
 TAG:=${SHORT_HASH}_${ARCH}
 IMAGE=${PROJECT}:${TAG}
+OPTINLC_IMAGE:=${IMAGE}
 IMAGE_PUBLISH=${DOCKER_REPOSITORY}:${PROJECT}_${TAG}
+
+DOCKER_CACHE_DIRECTORY="${ROOT_DIR}/.docker_cache"
+DOCKER_ARCHIVE="${DOCKER_CACHE_DIRECTORY}/optinlc_${TAG}.tar"
 
 
 .PHONY: show-hash
@@ -33,7 +46,13 @@ show-hash:
 	@echo "Git Short Hash: $(GIT_SHORT_HASH)"
 
 .PHONY: all
-all: docker_pull_fast build_fast 
+all:
+	make load_docker_images
+	make docker_pull_fast
+	make build_fast
+	make save_docker_images
+
+
 
 .PHONY: clean_build
 clean_build: clean init_submodules build_mathematics_toolbox _build
@@ -65,7 +84,7 @@ build_mathematics_toolbox:
 	cd "${SUBMODULES_PATH}/mathematics_toolbox" && make build
 
 .PHONY: build
-build: docker_pull_fast build_fast 
+build: all 
 
 .PHONY: _build
 _build: check_cross_compile_deps
@@ -147,5 +166,19 @@ docker_pull:
 	docker tag "${IMAGE_PUBLISH}" "${IMAGE}" || true
 	docker rmi "${IMAGE_PUBLISH}" || true
 
+.PHONY: save_docker_images
+save_docker_images:
+	mkdir -p "${DOCKER_CACHE_DIRECTORY}"
+	@if [ -w "$$(dirname "${DOCKER_ARCHIVE}")" ]; then \
+        rm -rf "${DOCKER_ARCHIVE}"; \
+        echo "Saving Docker images to ${DOCKER_ARCHIVE}..."; \
+        docker save -o "${DOCKER_ARCHIVE}" ${OSQP_IMAGE} ${EIGEN3_IMAGE} ${OPTINLC_IMAGE}; \
+    else \
+        echo "WARNING: Directory $$(dirname "${DOCKER_ARCHIVE}") is not writable. Unable to save docker images, skipping saving of docker images."; \
+    fi
+
+.PHONY: load_docker_images
+load_docker_images:
+	@docker load --input "${DOCKER_ARCHIVE}" 2>/dev/null || true
 
 
