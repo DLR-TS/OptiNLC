@@ -1,0 +1,75 @@
+name:  OptiNLC Reusable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Runner name'
+        required: true
+        type: string
+      archive_name:
+        description: 'Name of the uploaded build archive'
+        required: true
+        type: string
+      image_platform:
+        description: 'Docker compatible platform reference'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ inputs.platform }}
+
+    steps:
+      - name: Init
+        shell: bash
+        run: |
+          df -h
+          sudo apt update -y
+
+      - name: Disable man-db to make package install and removal faster
+        shell: bash
+        # From https://github.com/jlumbroso/free-disk-space/issues/40
+        run: |
+          echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
+          sudo dpkg-reconfigure man-db
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          submodules: 'recursive'
+
+      - name: Install requirements
+        shell: bash
+        run: |
+          df -h
+          sudo apt update -y
+          sudo apt install -y make
+
+      - name: Build 
+        shell: bash
+        run: |
+          echo "Building OptiNLC..."
+          make build
+
+      - name: Test 
+        shell: bash
+        run: |
+          echo "Testing OptiNLC..."
+          make test
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push docker images
+        shell: bash
+        run: |
+          make push
+
+

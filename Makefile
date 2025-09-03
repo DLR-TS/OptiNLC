@@ -13,8 +13,19 @@ ARCH?=$(shell uname -m)
 DOCKER_PLATFORM?=linux/$(ARCH)
 CROSS_COMPILE?=$(shell if [ "$(shell uname -m)" != "$(ARCH)" ]; then echo "true"; else echo "false"; fi)
 
+
+SHORT_HASH:=$(shell git rev-parse --short HEAD)
+DOCKER_REPOSITORY="ghcr.io/dlr-ts/mathematics_toolbox"
+
 PROJECT:=optinlc
-TAG := $(shell git rev-parse --short HEAD)_${ARCH}
+TAG:=${SHORT_HASH}_${ARCH}
+IMAGE=${PROJECT}:${TAG}
+_IMAGE_PUBLISH=${DOCKER_REPOSITORY}:${PROJECT}_${TAG}
+
+
+
+
+
 
 .PHONY: show-hash
 show-hash:
@@ -95,4 +106,24 @@ clean:  ## Clean OptiNLC build artifacts
 	docker rm $$(docker ps -a -q --filter "ancestor=${PROJECT}:${TAG}") --force 2> /dev/null || true
 	docker rmi $$(docker images -q ${PROJECT}:${TAG}) --force 2> /dev/null || true
 	docker rmi --force $$(docker images --filter "dangling=true" -q --no-trunc) 2> /dev/null || true
+
+
+.PHONY: push
+push: docker_push
+
+.PHONY: docker_push
+docker_push: save_docker_images
+	docker tag "${IMAGE}" "${IMAGE_PUBLISH}"
+	docker push "${IMAGE_PUBLISH}"
+
+.PHONY: pull
+pull: docker_pull
+
+.PHONY: docker_pull
+docker_pull:
+	docker pull "${IMAGE_PUBLISH}" || true
+	docker tag "${IMAGE_PUBLISH}" "${OSQP_IMAGE}" || true
+	docker rmi "${IMAGE_PUBLISH}" || true
+
+
 
