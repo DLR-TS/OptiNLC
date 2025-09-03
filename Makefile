@@ -65,10 +65,11 @@ build_mathematics_toolbox:
 	cd "${SUBMODULES_PATH}/mathematics_toolbox" && make build
 
 .PHONY: build
-build: clean docker_pull_fast build_fast 
+build: docker_pull_fast build_fast 
 
 .PHONY: _build
 _build: check_cross_compile_deps
+	rm -rf build
 	cd mathematics_toolbox && make all
 	@if [ "$(CROSS_COMPILE)" = "true" ]; then \
         echo "Cross-compiling ${PROJECT}:${TAG} for $(ARCH)..."; \
