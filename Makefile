@@ -144,7 +144,7 @@ pull: docker_pull
 .PHONY: docker_pull
 docker_pull:
 	docker pull "${IMAGE_PUBLISH}" || true
-	docker tag "${IMAGE_PUBLISH}" "${OSQP_IMAGE}" || true
+	docker tag "${IMAGE_PUBLISH}" "${IMAGE}" || true
 	docker rmi "${IMAGE_PUBLISH}" || true
 
 
